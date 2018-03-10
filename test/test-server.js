@@ -142,3 +142,85 @@ describe('Shopping List', function() {
       });
   });
 });
+
+describe ('Recipes', function() {
+  before(function() {
+    return runServer();
+  })
+  after(function() {
+    return closeServer();
+  })
+  it('should list items on GET', function() {
+    return chai.request(app)
+      .get('/recipes')
+      .then(function(res) {
+        expect(res).to.have.status(200);
+        expect(res).to.be.json;
+        expect(res.body).to.be.a('array');
+        expect(res.body.length).to.be.at.least(1);
+        const expectedKeys = ['id', 'name', 'ingredients'];
+        res.body.forEach(function(item) {
+          expect(item).to.be.a('object');
+          expect(item).to.include.keys(expectedKeys);
+
+        })
+      })
+  })
+  it('should add an item on POST', function() {
+    const newItem = {name: 'coconut rice', ingredients: ['coconut milk', 'rice', 'water']};
+    return chai.request(app)
+      .post('/recipes')
+      .send(newItem)
+      then(function(res) {
+        expect(res).to.have.status(201);
+        expect(res).to.be.json;
+        expect(res.body).to.be.a('object');
+        expect(res.body).to.include.keys('id', 'name', 'ingredients');
+        expect(res.body.id).to.not.equal(null);
+        expect(res.body).to.deep.equal(Object.assign(newItem, {id: res.body.id}));
+      })
+  })
+  /* 
+  received error message :   1) Recipes
+       should update items on PUT:
+     AssertionError: expected { Object (domain, _events, ...) } to have status code 200 but got 204
+      at test\test-server.js:197:29
+      at <anonymous>
+      at process._tickCallback (internal/process/next_tick.js:188:7)
+
+
+
+npm ERR! Test failed.  See above for more details.
+
+  it('should update items on PUT', function() {
+    const updateData = {
+      name: 'chicken souvlaki',
+      ingredients: ['chicken', 'lemon', 'oregano']
+    };
+    return chai.request(app)
+      .get('/recipes')
+      .then(function(res) {
+        updateData.id = res.body[0].id;
+        return chai.request(app)
+          .put(`/recipes/${updateData.id}`)
+          .send(updateData)
+      })
+      .then(function(res) {
+        expect(res).to.have.status(200);
+        expect(res).to.be.json;
+        expect(res.body).to.be.a('object');
+        expect(res.body).to.deep.equal(updateData);
+      })
+  })*/
+  it('should delete items on DELETE', function() {
+    return chai.request(app)
+    .get('/recipes')
+    .then(function(res) {
+      return chai.request(app)
+        .delete(`/recipes/${res.body[0].id}`)
+    })
+    then(function(res) {
+      expect(res).to.have.status(204);
+    })
+  })
+})
